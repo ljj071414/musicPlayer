@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>音乐播放器</title>
+    <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            height: 100vh;
+        }
+        .cover {
+            position: absolute;
+            content: '';
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: url(https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1549883473552&di=ffd12318fb691c6bffae883c12134de6&imgtype=0&src=http%3A%2F%2Fi0.hdslb.com%2Fbfs%2Farchive%2F54290a199a056e502c414f051920fe11800e7b55.jpg) center center no-repeat;
+            background-size: cover;
+            filter: blur(5px);
+        }
+        .musicbox {
+            position: absolute;
+            left: 50%;
+            top: 40%;
+            transform: translate(-50%, -50%);
+            font-family: cursive;
+            font-size: 16px;
+            color: #f06d6a;
+            width: 350px;
+        } 
+        .music-panel {
+            border: 1px solid #76dba3;
+            padding: 20px 20px 5px 20px;
+            background-color: rgba(255, 255, 255, 0.9)
+        } 
+
+        .music .control {
+            margin-top: 20px;
+            font-size: 22px;
+            color: #ee8a87;
+            float: left;
+        }
+
+        .music .control .fa {
+            margin-right: 12px;
+            cursor: pointer;
+        }
+
+        .music .control .fa.disable {
+            opacity: 0.3;
+        }
+
+        .music .info {
+            margin-left: 120px;
+        }
+
+        .music .info .title {
+            font-size: 18px;
+        }
+
+        .music .info .author {
+            font-size: 14px;
+        }
+
+        .muisc .progress {
+            width: 260px;
+        }
+
+        .music-panel .progress .bar {
+            height: 3px;
+            margin-top: 5px;
+            background-color: rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+
+        .music-panel .progress .progress-now {
+            background-color: #ee8a87;
+            height: 3px;
+            width: 0;
+            position: relative;
+        }
+
+        .musicbox .time {
+            text-align: center;
+        }
+
+        .musicbox:after,
+        .musicbox .music:after {
+            content: '';
+            display: block;
+            clear: both;
+        }
+
+        .musicbox .list {
+            list-style: none;
+        }
+        .musicbox .list>li {
+            position: relative;
+            padding: 4px 10px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-top: none;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .musicbox .list>li:hover {
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+        .musicbox .list>li.playing:before {
+            position: absolute;
+            top: 0;
+            left: 0;
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.8);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="cover"></div>
+    <div class="musicbox">
+        <div class="music-panel">
+            <div class="music">
+                <div class="control">
+                    <span class="back"><i class="fa fa-step-backward"></i></span>
+                    <span class="play"><i class="fa fa-pause"></i></span>
+                    <span class="forward"><i class="fa fa-step-forward"></i></span>
+                </div>
+                <div class="info">
+                    <div class="title">裂缝中的阳光</div>
+                    <div class="author">林俊杰</div>
+                </div>
+            </div>
+            <div class="progress">
+                <div class="bar">
+                    <div class="progress-total"></div>
+                    <div class="progress-now"></div>
+                </div>
+                <div class="time">0:00</div>
+            </div>
+        </div>
+        <ul class="list">
+            <li>林俊杰-裂缝中的阳光</li>
+        </ul>
+    </div>
+</body>
+<script>
+    var currentIndex = 0
+    var musicList = [
+      {
+        src: 'http://cloud.hunger-valley.com/music/玫瑰.mp3',
+        title: '玫瑰',
+        auther: '贰佰'
+      },
+      {
+        src: 'http://cloud.hunger-valley.com/music/ifyou.mp3',
+        title: 'IF YOU',
+        auther: 'Big Bang'
+      }
+  
+    ]
+    getMusicList(function(list){
+        console.log(list)
+        loadMusic(list[currentIndex])
+    })
+    
+    audio.ontimeupdate = function(){
+        console.log(this.currentTime)
+        $('.musicbox .progress-now').style.width = (this.currentTime/this.duration)*100 + '%'
+        var min = Math.floor(this.currentTime/60)
+        var sec = Math.floor(this.currentTime)%60 + ''
+        sec = sec.length === 2? sec : '0' + sec
+        $('.musicbox .time').innerText = min + ':' + sec
+    }
+
+    function $(selector) {
+        return document.querySelector(selector)
+    }
+    function getMusicList(callback){
+        var xhr = new XMLHttpRequest()
+        xhr.open('GET', 'musicList', true)
+        xhr.onload = function(){
+            if((xhr.status >=200 && xhr.status < 300) || xhr.status === 304){
+                callback(JSON.parse(this.responseText))
+            }else{
+                console.log('获取数据失败')
+            }
+        }
+        xhr.onerror = function(){
+            console.log('服务器异常')
+        }
+        xhr.send()
+    }
+
+    function loadMusic(musicObj){
+        console.log('begin play', musicObj)
+        $('.musicbox .title').innerText = musicObj.title
+        $('.musicbox .author').innerText = musicObj.author
+        audio.src = musicObj.src
+    }
+
+
+
+
+</script>
+</html>
